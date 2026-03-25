@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>MakeIT - Focus & Flow</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(45deg, #FF8C42, #FF5E78, #FFD166, #FF5E78);
+            --glass-bg: rgba(255, 255, 255, 0.3);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --text-main: #1d1d1f;
+            --input-fill: rgba(255, 255, 255, 0.5);
+            --btn-bg: #1d1d1f;
+            --btn-text: #ffffff;
+            --prio-high: rgba(255, 94, 120, 0.6);
+            --prio-mid: rgba(255, 209, 102, 0.6);
+            --prio-low: rgba(255, 255, 255, 0.2);
+            --scrollbar-thumb: rgba(100, 100, 100, 0.3);
+            --anim-speed: 15s;
+        }
+
+        body.focus-mode {
+            --bg-gradient: linear-gradient(45deg, #2c3e50, #4ca1af, #2c3e50);
+            --anim-speed: 30s;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(45deg, #0f2027, #203a43, #2c5364);
+            --glass-bg: rgba(0, 0, 0, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --input-fill: rgba(255, 255, 255, 0.1);
+            --btn-bg: #ffffff;
+            --btn-text: #1d1d1f;
+            --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, system-ui, sans-serif;
+            height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: liquid var(--anim-speed) ease infinite;
+            overflow: hidden;
+            transition: background 2s ease;
+        }
+
+        @keyframes liquid {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 90%; max-width: 380px; padding: 35px 25px;
+            background: var(--glass-bg); backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px); border: 1px solid var(--glass-border);
+            border-radius: 35px; box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { margin: 0; font-size: 1.8rem; color: var(--text-main); font-weight: 800; letter-spacing: -1px; }
+
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+
+        /* Estilo Pomodoro Elegante con Iconos SVG */
+        #pomo-wrapper {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.15); padding: 6px 14px;
+            border-radius: 20px; transition: 0.3s;
+        }
+
+        /* Contenedor de iconos SVG */
+        .pomo-icon-svg {
+            width: 18px; height: 18px; fill: none; stroke: var(--text-main);
+            stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+            vertical-align: middle;
+        }
+
+        #pomo-display { 
+            font-weight: 700; color: var(--text-main); 
+            font-variant-numeric: tabular-nums; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        #reset-pomo {
+            cursor: pointer; opacity: 0.5; transition: 0.3s; display: none;
+            width: 16px; height: 16px;
+        }
+        #reset-pomo:hover { opacity: 1; transform: rotate(-180deg); }
+
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; }
+
+        input[type="text"] {
+            flex: 1; padding: 14px; border-radius: 15px; border: 1px solid var(--glass-border);
+            background: var(--input-fill); color: var(--text-main); font-size: 16px; outline: none;
+        }
+
+        select#prioSelect {
+            padding: 10px; border-radius: 15px; border: 1px solid var(--glass-border);
+            background: var(--input-fill); color: var(--text-main); font-weight: bold; cursor: pointer;
+        }
+
+        button#add-btn {
+            background: var(--btn-bg); color: var(--btn-text);
+            border: none; width: 60px; border-radius: 15px;
+            cursor: pointer; font-size: 1.5rem;
+        }
+
+        ul { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+        ul::-webkit-scrollbar { width: 4px; }
+        ul::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+
+        li {
+            background: rgba(255, 255, 255, 0.1); margin-bottom: 12px; padding: 14px;
+            border-radius: 18px; display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.1); transition: 0.3s;
+        }
+
+        li.prio-3 { box-shadow: 0 0 15px var(--prio-high); border-color: var(--prio-high); animation: pulse 2s infinite; }
+        li.prio-2 { box-shadow: 0 0 10px var(--prio-mid); border-color: var(--prio-mid); }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 5px var(--prio-high); }
+            50% { box-shadow: 0 0 15px var(--prio-high); }
+        }
+
+        li.completed { order: 100 !important; opacity: 0.3; filter: grayscale(1); box-shadow: none !important; }
+        .task-text { flex: 1; cursor: pointer; color: var(--text-main); font-weight: 600; }
+        .completed .task-text { text-decoration: line-through; }
+        .del { color: #FF5E78; border: none; background: none; cursor: pointer; font-size: 1.4rem; }
+
+        #empty-message { text-align: center; color: var(--text-main); opacity: 0.5; padding: 30px 10px; font-style: italic; font-size: 0.9rem; }
+
+        .clear-btn { margin-top: 15px; background: none; border: none; color: var(--text-main); opacity: 0.4; cursor: pointer; text-decoration: underline; width: 100%; font-size: 0.8rem; }
+
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.2); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #FF8C42; }
+        input:checked + .slider:before { transform: translateX(14px); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>MakeIT</h1>
+        <div class="header-actions">
+            <div id="pomo-wrapper">
+                <div id="pomo-display" onclick="togglePomo()">
+                    <svg class="pomo-icon-svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span id="pomo-time">25:00</span>
+                </div>
+                <svg id="reset-pomo" class="pomo-icon-svg" onclick="resetPomo()" viewBox="0 0 24 24" style="stroke-width: 2;">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </header>
+
+    <div class="input-group">
+        <input type="text" id="taskInput" placeholder="¿En qué nos enfocamos?" autocomplete="off">
+        <div class="controls">
+            <select id="prioSelect">
+                <option value="3">🔥 Alta</option>
+                <option value="2">☀️ Media</option>
+                <option value="1">❄️ Baja</option>
+            </select>
+            <button id="add-btn">+</button>
+        </div>
+    </div>
+
+    <div id="empty-message" style="display:none;">✨ Todo despejado.</div>
+    <ul id="taskList"></ul>
+
+    <button class="clear-btn" id="clearBtn">Limpiar completadas</button>
+</div>
+
+<script>
+    const input = document.getElementById('taskInput');
+    const prioSelect = document.getElementById('prioSelect');
+    const addBtn = document.getElementById('add-btn');
+    const list = document.getElementById('taskList');
+    const themeToggle = document.getElementById('theme-toggle');
+    const clearBtn = document.getElementById('clearBtn');
+    const emptyMsg = document.getElementById('empty-message');
+    const resetIcon = document.getElementById('reset-pomo');
+    const pomoTime = document.getElementById('pomo-time');
+    
+    let pomoSeconds = 1500;
+    let pomoInterval = null;
+    let isPomoRunning = false;
+
+    let tasks = JSON.parse(localStorage.getItem('makeit_pomo_final')) || [];
+
+    function playSound(type) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if(type === 'task') {
+            oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
+        } else {
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 1);
+            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+            oscillator.start(); oscillator.stop(audioCtx.currentTime + 1);
+        }
+    }
+
+    function togglePomo() {
+        if (isPomoRunning) {
+            clearInterval(pomoInterval);
+            isPomoRunning = false;
+            document.body.classList.remove('focus-mode');
+        } else {
+            isPomoRunning = true;
+            document.body.classList.add('focus-mode');
+            pomoInterval = setInterval(() => {
+                pomoSeconds--;
+                updateUI();
+                if (pomoSeconds <= 0) {
+                    clearInterval(pomoInterval);
+                    playSound('pomo');
+                    confetti({ particleCount: 150, spread: 100, colors: ['#4ca1af', '#ffffff'] });
+                    resetPomo();
+                }
+            }, 1000);
+        }
+        updateUI();
+    }
+
+    function resetPomo() {
+        clearInterval(pomoInterval);
+        pomoSeconds = 1500;
+        isPomoRunning = false;
+        document.body.classList.remove('focus-mode');
+        updateUI();
+    }
+
+    function formatTime() {
+        const mins = Math.floor(pomoSeconds / 60);
+        const secs = pomoSeconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateUI() {
+        pomoTime.innerText = formatTime();
+        resetIcon.style.display = (pomoSeconds < 1500) ? 'inline-block' : 'none';
+        
+        // Cambiamos el color del icono si está activo
+        const iconSvg = document.querySelector('.pomo-icon-svg');
+        iconSvg.style.stroke = isPomoRunning ? '#FFD166' : 'var(--text-main)';
+    }
+
+    themeToggle.onchange = () => {
+        document.documentElement.setAttribute('data-theme', themeToggle.checked ? 'dark' : 'light');
+    };
+
+    function render() {
+        list.innerHTML = '';
+        if (tasks.length === 0) { emptyMsg.style.display = 'block'; clearBtn.style.display = 'none'; }
+        else { emptyMsg.style.display = 'none'; clearBtn.style.display = tasks.some(t => t.done) ? 'block' : 'none'; }
+
+        tasks.sort((a, b) => a.done - b.done || b.priority - a.priority).forEach(t => {
+            const li = document.createElement('li');
+            li.className = `prio-${t.priority} ${t.done ? 'completed' : ''}`;
+            li.innerHTML = `<span class="task-text">${t.text}</span><button class="del">×</button>`;
+            li.querySelector('.task-text').onclick = () => {
+                if (!t.done) {
+                    playSound('task');
+                    if (t.priority === 3) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }
+                t.done = !t.done; save();
+            };
+            li.querySelector('.del').onclick = () => { tasks = tasks.filter(x => x.id !== t.id); save(); };
+            list.appendChild(li);
+        });
+    }
+
+    function save() {
+        localStorage.setItem('makeit_pomo_final', JSON.stringify(tasks));
+        render();
+    }
+
+    addBtn.onclick = () => {
+        if(!input.value.trim()) return;
+        tasks.push({id: Date.now(), text: input.value, done: false, priority: parseInt(prioSelect.value)});
+        input.value = ''; save();
+        input.focus();
+    };
+
+    input.onkeydown = (e) => { if(e.key === 'Enter') addBtn.onclick(); };
+    clearBtn.onclick = () => { tasks = tasks.filter(t => !t.done); save(); };
+    render();
+</script>
+</body>
+</html>
